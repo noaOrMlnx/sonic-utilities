@@ -625,6 +625,29 @@ def load_minigraph():
     click.echo("Please note setting loaded from minigraph will be lost after system reboot. To preserve setting, run `config save`.")
 
 
+
+
+#
+# config monitortx THRESHOLD 40
+# config monitortx POOLING_PERIOD 20
+#
+
+@config.command("monitortx")
+@click.argument('param', required=True)
+@click.argument('value', required=True)
+def monitortx_set(param, value):
+    if param.lower() != 'threshold' and param.lower() != 'pooling_period':
+        click.echo("Please enter valid configurations")
+    else:
+        table_name = "TX_ERROR_CFG"
+        config_db = ConfigDBConnector()
+        config_db.connect()
+        click.echo(param)
+        config_db.set_entry(table_name, param, {"value":value})
+
+
+
+
 #
 # 'hostname' command
 #

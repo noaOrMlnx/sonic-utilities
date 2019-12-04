@@ -806,6 +806,34 @@ def status(interfacename, verbose):
     run_command(cmd, display_cmd=verbose)
 
 
+
+
+@cli.group(cls=AliasedGroup, default_if_no_args=False)
+def monitortx():
+    """show configurations of monitor tx"""
+    pass
+
+
+# show monitortx tx_config
+@monitortx.command()
+def tx_config():
+    config_db = ConfigDBConnector()
+    config_db.connect()
+    data = config_db.get_table('TX_ERROR_CFG')
+
+    for param in data.keys():
+        value = data[param]['value']
+        if param.lower().endswith('period'):
+            conf = 'period_pool'
+        else:
+            conf = 'threshold'
+
+        click.echo('%s value is %s' % (conf, value))
+
+
+
+
+
 # 'counters' subcommand ("show interfaces counters")
 @interfaces.group(invoke_without_command=True)
 @click.option('-a', '--printall', is_flag=True)
