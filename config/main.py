@@ -628,11 +628,11 @@ def load_minigraph():
 
 
 #
-# config monitortx THRESHOLD 40
-# config monitortx POOLING_PERIOD 20
+# config monitor_tx THRESHOLD 40
+# config monitor_tx POOLING_PERIOD 20
 #
 
-@config.command("monitortx")
+@config.command("monitor_tx")
 @click.argument('param', required=True)
 @click.argument('value', required=True)
 def monitortx_set(param, value):
