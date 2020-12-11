@@ -137,6 +137,8 @@ save_bcmcmd_all_ns() {
 
 PLUGIN_SCRIPTS="$(find /usr/bin/debug-dump -type f)"
 
+PLUGIN_SCRIPTS="$(find /usr/bin/debug-dump -type f)"
+
 ###############################################################################
 # Runs a comamnd and saves its output to the incrementally built tar.
 # Command gets timedout if it runs for more than TIMEOUT_MIN minutes.
