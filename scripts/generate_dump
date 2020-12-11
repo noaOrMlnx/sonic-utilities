@@ -135,6 +135,8 @@ save_bcmcmd_all_ns() {
     fi
 }
 
+PLUGIN_SCRIPTS="$(find /usr/bin/debug-dump -type f)"
+
 ###############################################################################
 # Runs a comamnd and saves its output to the incrementally built tar.
 # Command gets timedout if it runs for more than TIMEOUT_MIN minutes.
@@ -1193,6 +1195,10 @@ main() {
 
     save_cmd "docker ps -a" "docker.ps"
     save_cmd "docker top pmon" "docker.pmon"
+
+    for plugin_script in $PLUGIN_SCRIPTS; do
+	save_cmd "bash $plugin_script" "$(basename $plugin_script)" true
+    done
 
     save_saidump
 
