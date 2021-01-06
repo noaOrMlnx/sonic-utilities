@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 """
     Script to show MAC/FDB entries learnt in Hardware
     
@@ -30,7 +31,8 @@ import json
 import sys
 
 from natsort import natsorted
-from swsssdk import SonicV2Connector, port_util
+from swsssdk import port_util
+from swsscommon.swsscommon import SonicV2Connector
 from tabulate import tabulate
 
 class FdbShow(object):
@@ -64,23 +66,30 @@ class FdbShow(object):
 
         oid_pfx = len("oid:0x")
         for s in fdb_str:
-            fdb_entry = s.decode()
+            fdb_entry = s
             fdb = json.loads(fdb_entry .split(":", 2)[-1])
             if not fdb:
                 continue
 
             ent = self.db.get_all('ASIC_DB', s, blocking=True)
-            br_port_id = ent[b"SAI_FDB_ENTRY_ATTR_BRIDGE_PORT_ID"][oid_pfx:]
-            ent_type = ent[b"SAI_FDB_ENTRY_ATTR_TYPE"]
+            br_port_id = ent["SAI_FDB_ENTRY_ATTR_BRIDGE_PORT_ID"][oid_pfx:]
+            ent_type = ent["SAI_FDB_ENTRY_ATTR_TYPE"]
             fdb_type = ['Dynamic','Static'][ent_type == "SAI_FDB_ENTRY_TYPE_STATIC"]
             if br_port_id not in self.if_br_oid_map:
                 continue
             port_id = self.if_br_oid_map[br_port_id]
-            if_name = self.if_oid_map[port_id]
+            if port_id in self.if_oid_map:
+                if_name = self.if_oid_map[port_id]
+            else:
+                if_name = port_id
             if 'vlan' in fdb:
                 vlan_id = fdb["vlan"]
             elif 'bvid' in fdb:
-                vlan_id = port_util.get_vlan_id_from_bvid(self.db, fdb["bvid"])
+                try:
+                    vlan_id = port_util.get_vlan_id_from_bvid(self.db, fdb["bvid"])
+                except Exception:
+                    vlan_id = fdb["bvid"]
+                    print("Failed to get Vlan id for bvid {}\n".format(fdb["bvid"]))
             self.bridge_mac_list.append((int(vlan_id),) + (fdb["mac"],) + (if_name,) + (fdb_type,))
 
         self.bridge_mac_list.sort(key = lambda x: x[0])
@@ -122,8 +131,8 @@ class FdbShow(object):
             self.FDB_COUNT += 1
             output.append([self.FDB_COUNT, fdb[0], fdb[1], fdb[2], fdb[3]])
 
-        print tabulate(output, self.HEADER)
-        print "Total number of entries {0} ".format(self.FDB_COUNT)
+        print(tabulate(output, self.HEADER))
+        print("Total number of entries {0}".format(self.FDB_COUNT))
 
 
 def main():
@@ -138,7 +147,7 @@ def main():
         fdb = FdbShow()
         fdb.display(args.vlan, args.port)
     except Exception as e:
-        print e.message
+        print(str(e))
         sys.exit(1)
 
 if __name__ == "__main__":

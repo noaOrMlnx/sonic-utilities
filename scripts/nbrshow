@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 """
     Script to show Ipv4/Ipv6 neighbor entries
 
@@ -32,8 +33,10 @@ import subprocess
 import re
 
 from natsort import natsorted
-from swsssdk import SonicV2Connector, port_util
+from swsssdk import port_util
+from swsscommon.swsscommon import SonicV2Connector
 from tabulate import tabulate
+
 
 """
    Base class for v4 and v6 neighbor.
@@ -73,22 +76,28 @@ class NbrBase(object):
 
         oid_pfx = len("oid:0x")
         for s in fdb_str:
-            fdb_entry = s.decode()
+            fdb_entry = s
             fdb = json.loads(fdb_entry .split(":", 2)[-1])
             if not fdb:
                 continue
 
             ent = self.db.get_all('ASIC_DB', s, blocking=True)
-            br_port_id = ent[b"SAI_FDB_ENTRY_ATTR_BRIDGE_PORT_ID"][oid_pfx:]
-            ent_type = ent[b"SAI_FDB_ENTRY_ATTR_TYPE"]
+            br_port_id = ent["SAI_FDB_ENTRY_ATTR_BRIDGE_PORT_ID"][oid_pfx:]
             if br_port_id not in self.if_br_oid_map:
                 continue
             port_id = self.if_br_oid_map[br_port_id]
-            if_name = self.if_oid_map[port_id]
+            if port_id in self.if_oid_map:
+                if_name = self.if_oid_map[port_id]
+            else:
+                if_name = port_id
             if 'vlan' in fdb:
                 vlan_id = fdb["vlan"]
             elif 'bvid' in fdb:
-                vlan_id = port_util.get_vlan_id_from_bvid(self.db, fdb["bvid"])
+                try:
+                    vlan_id = port_util.get_vlan_id_from_bvid(self.db, fdb["bvid"])
+                except Exception:
+                    vlan_id = fdb["bvid"]
+                    print("Failed to get Vlan id for bvid {}\n".format(fdb["bvid"]))
             self.bridge_mac_list.append((int(vlan_id),) + (fdb["mac"],) + (if_name,))
 
         return
@@ -97,7 +106,7 @@ class NbrBase(object):
         """
             Fetch Neighbor data (ARP/IPv6 Neigh) from kernel.
         """
-        p = subprocess.Popen(self.cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(self.cmd, shell=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (output, err) = p.communicate()
         rc = p.wait()
 
@@ -122,7 +131,7 @@ class NbrBase(object):
             vlan = '-'
             if 'Vlan' in ent[2]:
                 vlanid = int(re.search(r'\d+', ent[2]).group())
-                mac = unicode(ent[1].upper())
+                mac = ent[1].upper()
                 fdb_ent = next((fdb for fdb in self.bridge_mac_list[:]
                                if fdb[0] == vlanid and fdb[1] == mac), None)
                 vlan = vlanid
@@ -135,11 +144,11 @@ class NbrBase(object):
 
         self.nbrdata = natsorted(output, key=lambda x: x[0])
 
-        print tabulate(self.nbrdata, self.HEADER)
-        print "Total number of entries {0} ".format(self.NBR_COUNT)
+        print(tabulate(self.nbrdata, self.HEADER))
+        print("Total number of entries {0} ".format(self.NBR_COUNT))
 
     def display_err(self):
-        print "Error fetching Neighbors: {} ".format(self.err)
+        print("Error fetching Neighbors: {} ".format(self.err))
 
 
 class ArpShow(NbrBase):
@@ -252,7 +261,7 @@ def main():
             arp.display()
 
     except Exception as e:
-        print e.message
+        print(str(e))
         sys.exit(1)
 
 

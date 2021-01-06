@@ -1,20 +1,6 @@
-#!/usr/bin/env python -u
-# -*- coding: utf-8 -*-
-
 import click
-import netaddr
 from swsssdk import ConfigDBConnector
-
-
-def is_ipaddress(val):
-    if not val:
-        return False
-    try:
-        netaddr.IPAddress(str(val))
-    except:
-        return False
-    return True
-
+import utilities_common.cli as clicommon
 
 def add_table_kv(table, entry, key, val):
     config_db = ConfigDBConnector()
@@ -30,7 +16,6 @@ def del_table_key(table, entry, key):
         if key in data:
             del data[key]
         config_db.set_entry(table, entry, data)
-
 
 @click.group()
 def aaa():
@@ -81,7 +66,7 @@ authentication.add_command(fallback)
 def login(auth_protocol):
     """Switch login authentication [ {tacacs+, local} | default ]"""
     if len(auth_protocol) is 0:
-        print 'Not support empty argument'
+        click.echo('Argument "auth_protocol" is required')
         return
 
     if 'default' in auth_protocol:
@@ -118,7 +103,7 @@ def timeout(ctx, second):
     elif second:
         add_table_kv('TACPLUS', 'global', 'timeout', second)
     else:
-        click.echo('Not support empty argument')
+        click.echo('Argument "second" is required')
 tacacs.add_command(timeout)
 default.add_command(timeout)
 
@@ -133,7 +118,7 @@ def authtype(ctx, type):
     elif type:
         add_table_kv('TACPLUS', 'global', 'auth_type', type)
     else:
-        click.echo('Not support empty argument')
+        click.echo('Argument "type" is required')
 tacacs.add_command(authtype)
 default.add_command(authtype)
 
@@ -148,7 +133,7 @@ def passkey(ctx, secret):
     elif secret:
         add_table_kv('TACPLUS', 'global', 'passkey', secret)
     else:
-        click.echo('Not support empty argument')
+        click.echo('Argument "secret" is required')
 tacacs.add_command(passkey)
 default.add_command(passkey)
 
@@ -164,7 +149,7 @@ default.add_command(passkey)
 @click.option('-m', '--use-mgmt-vrf', help="Management vrf, default is no vrf", is_flag=True)
 def add(address, timeout, key, auth_type, port, pri, use_mgmt_vrf):
     """Specify a TACACS+ server"""
-    if not is_ipaddress(address):
+    if not clicommon.is_ipaddress(address):
         click.echo('Invalid ip address')
         return
 
@@ -196,7 +181,7 @@ tacacs.add_command(add)
 @click.argument('address', metavar='<ip_address>')
 def delete(address):
     """Delete a TACACS+ server"""
-    if not is_ipaddress(address):
+    if not clicommon.is_ipaddress(address):
         click.echo('Invalid ip address')
         return
 
@@ -204,8 +189,3 @@ def delete(address):
     config_db.connect()
     config_db.set_entry('TACPLUS_SERVER', address, None)
 tacacs.add_command(delete)
-
-
-if __name__ == "__main__":
-    aaa()
-

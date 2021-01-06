@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 """
     Script to clear MAC/FDB entries learnt in Hardware
 
@@ -15,9 +16,7 @@ import argparse
 import json
 import sys
 
-from natsort import natsorted
-from swsssdk import SonicV2Connector, port_util
-from tabulate import tabulate
+from swsscommon.swsscommon import SonicV2Connector
 
 class FdbClear(object):
 
@@ -51,7 +50,7 @@ def main():
             fdb.send_notification("ALL", "ALL")
             print("FDB entries are cleared.")
     except Exception as e:
-        print e.message
+        print(str(e))
         sys.exit(1)
 
 if __name__ == "__main__":

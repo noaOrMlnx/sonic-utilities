@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # main.py
 #
@@ -8,103 +8,105 @@
 try:
     import click
     import os
-    import pexpect
-    import re
-    import subprocess
     import sys
+    import utilities_common.cli as clicommon
+
     from tabulate import tabulate
-    from lib import *
+    from .lib import *
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
 @click.group()
-def consutil():
+@clicommon.pass_db
+def consutil(db):
     """consutil - Command-line utility for interacting with switches via console device"""
+    config_db = db.cfgdb
+    data = config_db.get_entry(CONSOLE_SWITCH_TABLE, FEATURE_KEY)
+    if FEATURE_ENABLED_KEY not in data or data[FEATURE_ENABLED_KEY] == "no":
+        click.echo("Console switch feature is disabled")
+        sys.exit(ERR_DISABLE)
 
-    if os.geteuid() != 0:
-        print "Root privileges are required for this operation"
-        sys.exit(1)
+    SysInfoProvider.init_device_prefix()
 
 # 'show' subcommand
 @consutil.command()
-def show():
-    """Show all /dev/ttyUSB lines and their info"""
-    devices = getAllDevices()
-    busyDevices = getBusyDevices()
+@clicommon.pass_db
+@click.option('--brief', '-b', metavar='<brief_mode>', required=False, is_flag=True)
+def show(db, brief):
+    """Show all ports and their info include available ttyUSB devices unless specified brief mode"""
+    port_provider = ConsolePortProvider(db, brief)
+    ports = list(port_provider.get_all())
 
-    header = ["Line", "Actual/Configured Baud", "PID", "Start Time"]
+    # sort ports for table rendering
+    ports.sort(key=lambda p: int(p.line_num))
+
+    # set table header style
+    header = ["Line", "Baud", "PID", "Start Time", "Device"]
     body = []
-    for device in devices:
-        lineNum = device[11:]
-        busy = " "
-        pid = ""
-        date = ""
-        if lineNum in busyDevices:
-            pid, date = busyDevices[lineNum]
-            busy = "*"
-        actBaud, confBaud, _ = getConnectionInfo(lineNum)
-        # repeated "~" will be replaced by spaces - hacky way to align the "/"s
-        baud = "{}/{}{}".format(actBaud, confBaud, "~"*(15-len(confBaud)))
-        body.append([busy+lineNum, baud, pid, date])
-        
-    # replace repeated "~" with spaces - hacky way to align the "/"s
-    click.echo(tabulate(body, header, stralign="right").replace('~', ' ')) 
+    for port in ports:
+        # runtime information
+        busy = "*" if port.busy else " "
+        pid = port.session_pid if port.session_pid else "-"
+        date = port.session_start_date if port.session_start_date else "-"
+        baud = port.baud
+        body.append([busy+port.line_num, baud if baud else "-", pid if pid else "-", date if date else "-", port.remote_device])
+    click.echo(tabulate(body, header, stralign='right'))
 
 # 'clear' subcommand
 @consutil.command()
-@click.argument('linenum')
-def clear(linenum):
+@clicommon.pass_db
+@click.argument('target')
+@click.option('--devicename', '-d', is_flag=True, help="clear by name - if flag is set, interpret target as device name instead")
+def clear(db, target, devicename):
     """Clear preexisting connection to line"""
-    checkDevice(linenum)
-    linenum = str(linenum)
+    if os.geteuid() != 0:
+        click.echo("Root privileges are required for this operation")
+        sys.exit(ERR_CMD)
 
-    busyDevices = getBusyDevices()
-    if linenum in busyDevices:
-        pid, _ = busyDevices[linenum]
-        cmd = "sudo kill -SIGTERM " + pid
-        click.echo("Sending SIGTERM to process " + pid)
-        run_command(cmd)
-    else:
-        click.echo("No process is connected to line " + linenum)
+    # identify the target line
+    port_provider = ConsolePortProvider(db, configured_only=False)
+    try:
+        target_port = port_provider.get(target, use_device=devicename)
+    except LineNotFoundError:
+        click.echo("Target [{}] does not exist".format(target))
+        sys.exit(ERR_DEV)
+
+    if not target_port.clear_session():
+        click.echo("No process is connected to line " + target_port.line_num)
 
 # 'connect' subcommand
 @consutil.command()
+@clicommon.pass_db
 @click.argument('target')
-@click.option('--devicename', '-d', is_flag=True, help="connect by name - if flag is set, interpret linenum as device name instead")
-def connect(target, devicename):
+@click.option('--devicename', '-d', is_flag=True, help="connect by name - if flag is set, interpret target as device name instead")
+def connect(db, target, devicename):
     """Connect to switch via console device - TARGET is line number or device name of switch"""
-    lineNumber = getLineNumber(target, devicename)
-    checkDevice(lineNumber)
-    lineNumber = str(lineNumber)
+    # identify the target line
+    port_provider = ConsolePortProvider(db, configured_only=False)
+    try:
+        target_port = port_provider.get(target, use_device=devicename)
+    except LineNotFoundError:
+        click.echo("Cannot connect: target [{}] does not exist".format(target))
+        sys.exit(ERR_DEV)
 
-    # build and start picocom command
-    actBaud, _, flowBool = getConnectionInfo(lineNumber)
-    flowCmd = "h" if flowBool else "n"
-    quietCmd = "-q" if QUIET else ""
-    cmd = "sudo picocom -b {} -f {} {} {}{}".format(actBaud, flowCmd, quietCmd, DEVICE_PREFIX, lineNumber)
-    proc = pexpect.spawn(cmd)
-    proc.send("\n")
+    line_num = target_port.line_num
 
-    if QUIET:
-        readyMsg = DEV_READY_MSG
-    else:
-        readyMsg = "Terminal ready" # picocom ready message
-    busyMsg = "Resource temporarily unavailable" # picocom busy message
-
-    # interact with picocom or print error message, depending on pexpect output
-    index = proc.expect([readyMsg, busyMsg, pexpect.EOF, pexpect.TIMEOUT], timeout=TIMEOUT_SEC)
-    if index == 0: # terminal ready
-        click.echo("Successful connection to line {}\nPress ^A ^X to disconnect".format(lineNumber))
-        if QUIET:
-            # prints picocom output up to and including readyMsg
-            click.echo(proc.before + proc.match.group(0), nl=False) 
-        proc.interact()
-        if QUIET:
-            click.echo("\nTerminating...")
-    elif index == 1: # resource is busy
-        click.echo("Cannot connect: line {} is busy".format(lineNumber))
-    else: # process reached EOF or timed out
+    # connect
+    try:
+        session = target_port.connect()
+    except LineBusyError:
+        click.echo("Cannot connect: line [{}] is busy".format(line_num))
+        sys.exit(ERR_BUSY)
+    except InvalidConfigurationError as cfg_err:
+        click.echo("Cannot connect: {}".format(cfg_err.message))
+        sys.exit(ERR_CFG)
+    except ConnectionFailedError:
         click.echo("Cannot connect: unable to open picocom process")
+        sys.exit(ERR_DEV)
+
+    # interact
+    click.echo("Successful connection to line [{}]\nPress ^A ^X to disconnect".format(line_num))
+    session.interact()
 
 if __name__ == '__main__':
     consutil()

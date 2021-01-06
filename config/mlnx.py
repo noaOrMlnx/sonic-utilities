@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # main.py
 #
@@ -6,16 +6,12 @@
 #
 
 try:
-    import sys
     import os
-    import subprocess
-    import click
-    import imp
-    import syslog
-    import types
-    import traceback
     import time
-    from tabulate import tabulate
+
+    import click
+    from sonic_py_common import logger
+    import utilities_common.cli as clicommon
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
 
@@ -40,50 +36,9 @@ SNIFFER_CONF_FILE_IN_CONTAINER = CONTAINER_NAME + ':' + SNIFFER_CONF_FILE
 # Command to restart swss service
 COMMAND_RESTART_SWSS = 'systemctl restart swss.service'
 
-# ========================== Syslog wrappers ==========================
-def log_info(msg, syslog_identifier, also_print_to_console=False):
-    syslog.openlog(syslog_identifier)
-    syslog.syslog(syslog.LOG_INFO, msg)
-    syslog.closelog()
 
-    if also_print_to_console:
-        print msg
-
-
-def log_warning(msg, syslog_identifier, also_print_to_console=False):
-    syslog.openlog(syslog_identifier)
-    syslog.syslog(syslog.LOG_WARNING, msg)
-    syslog.closelog()
-
-    if also_print_to_console:
-        print msg
-
-
-def log_error(msg, syslog_identifier, also_print_to_console=False):
-    syslog.openlog(syslog_identifier)
-    syslog.syslog(syslog.LOG_ERR, msg)
-    syslog.closelog()
-
-    if also_print_to_console:
-        print msg
-
-
-# run command
-def run_command(command, display_cmd=False, ignore_error=False):
-    """Run bash command and print output to stdout
-    """
-    if display_cmd == True:
-        click.echo(click.style("Running command: ", fg='cyan') + click.style(command, fg='green'))
-
-    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-    (out, err) = proc.communicate()
-
-    if len(out) > 0:
-        click.echo(out)
-
-    if proc.returncode != 0 and not ignore_error:
-        sys.exit(proc.returncode)
-
+# Global logger instance
+log = logger.Logger(SNIFFER_SYSLOG_IDENTIFIER)
 
 # generate sniffer target file name include a time stamp.
 def sniffer_filename_generate(path, filename_prefix, filename_ext):
@@ -125,12 +80,12 @@ def env_variable_delete(delete_line):
 
 def conf_file_copy(src, dest):
     command = 'docker cp ' + src + ' ' + dest
-    run_command(command)
+    clicommon.run_command(command)
 
 
 def conf_file_receive():
     command = "docker exec {} bash -c 'touch {}'".format(CONTAINER_NAME, SNIFFER_CONF_FILE)
-    run_command(command)
+    clicommon.run_command(command)
     conf_file_copy(SNIFFER_CONF_FILE_IN_CONTAINER, TMP_SNIFFER_CONF_FILE)
 
 
@@ -145,7 +100,7 @@ def sniffer_env_variable_set(enable, env_variable_name, env_variable_string=""):
     env_variable_exist_string = env_variable_read(env_variable_name)
     if env_variable_exist_string:
         if enable is True:
-            print "sniffer is already enabled, do nothing"
+            click.echo("sniffer is already enabled, do nothing")
             ignore = True
         else:
             env_variable_delete(env_variable_exist_string)
@@ -153,14 +108,14 @@ def sniffer_env_variable_set(enable, env_variable_name, env_variable_string=""):
         if enable is True:
             env_variable_write(env_variable_string)
         else:
-            print "sniffer is already disabled, do nothing"
+            click.echo("sniffer is already disabled, do nothing")
             ignore = True
 
     if not ignore:
         config_file_send()
 
     command = 'rm -rf {}'.format(TMP_SNIFFER_CONF_FILE)
-    run_command(command)
+    clicommon.run_command(command)
 
     return ignore
 
@@ -168,9 +123,9 @@ def sniffer_env_variable_set(enable, env_variable_name, env_variable_string=""):
 # restart the swss service with command 'service swss restart'
 def restart_swss():
     try:
-        run_command(COMMAND_RESTART_SWSS)
-    except OSError, e:
-        log_error("Not able to restart swss service, %s" % str(e), SNIFFER_SYSLOG_IDENTIFIER, True)
+        clicommon.run_command(COMMAND_RESTART_SWSS)
+    except OSError as e:
+        log.log_error("Not able to restart swss service, %s" % str(e), True)
         return 1
     return 0
 
@@ -209,9 +164,9 @@ def sdk():
               prompt='Swss service will be restarted, continue?')
 def enable():
     """Enable SDK Sniffer"""
-    print "Enabling SDK sniffer"
+    click.echo("Enabling SDK sniffer")
     sdk_sniffer_enable()
-    print "Note: the sniffer file may exhaust the space on /var/log, please disable it when you are done with this sniffering."
+    click.echo("Note: the sniffer file may exhaust the space on /var/log, please disable it when you are done with this sniffering.")
 
 
 @sdk.command()
@@ -219,7 +174,7 @@ def enable():
               prompt='Swss service will be restarted, continue?')
 def disable():
     """Disable SDK Sniffer"""
-    print "Disabling SDK sniffer"
+    click.echo("Disabling SDK sniffer")
     sdk_sniffer_disable()
 
 
@@ -243,7 +198,7 @@ def sdk_sniffer_enable():
         err = restart_swss()
         if err is not 0:
             return
-        print 'SDK sniffer is Enabled, recording file is %s.' % sdk_sniffer_filename
+        click.echo('SDK sniffer is Enabled, recording file is %s.' % sdk_sniffer_filename)
     else:
         pass
 
@@ -256,7 +211,7 @@ def sdk_sniffer_disable():
         err = restart_swss()
         if err is not 0:
             return
-        print "SDK sniffer is Disabled."
+        click.echo("SDK sniffer is Disabled.")
     else:
         pass
 

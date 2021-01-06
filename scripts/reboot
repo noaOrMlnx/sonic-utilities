@@ -1,14 +1,35 @@
 #!/bin/bash
-
-REBOOT_USER=$(logname)
-REBOOT_TIME=$(date)
-PLATFORM=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
-ASIC_TYPE=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type)
 DEVPATH="/usr/share/sonic/device"
 PLAT_REBOOT="platform_reboot"
 REBOOT_CAUSE_FILE="/host/reboot-cause/reboot-cause.txt"
+REBOOT_TIME=$(date)
+
+# Reboot immediately if we run the kdump capture kernel
+VMCORE_FILE=/proc/vmcore
+if [ -e $VMCORE_FILE -a -s $VMCORE_FILE ]; then
+        echo "We have a /proc/vmcore, then we just kdump'ed"
+        echo "User issued 'kdump' command [User: kdump, Time: ${REBOOT_TIME}]" > ${REBOOT_CAUSE_FILE}
+        sync
+        PLATFORM=$(grep -oP 'sonic_platform=\K\S+' /proc/cmdline)
+        if [ ! -z "${PLATFORM}" -a -x ${DEVPATH}/${PLATFORM}/${PLAT_REBOOT} ]; then
+            exec ${DEVPATH}/${PLATFORM}/${PLAT_REBOOT}
+        fi
+        # If no platform-specific reboot tool, just run /sbin/reboot
+        /sbin/reboot
+        echo 1 > /proc/sys/kernel/sysrq
+        echo b > /proc/sysrq-trigger
+fi
+
+REBOOT_USER=$(logname)
+PLATFORM=$(sonic-cfggen -H -v DEVICE_METADATA.localhost.platform)
+ASIC_TYPE=$(sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type)
 VERBOSE=no
 EXIT_NEXT_IMAGE_NOT_EXISTS=4
+EXIT_SONIC_INSTALLER_VERIFY_REBOOT=21
+SSD_FW_UPDATE="ssd-fw-upgrade"
+REBOOT_SCRIPT_NAME=$(basename $0)
+REBOOT_TYPE="${REBOOT_SCRIPT_NAME}"
+TAG_LATEST=yes
 
 function debug()
 {
@@ -16,6 +37,16 @@ function debug()
         echo `date` $@
     fi
     logger "$@"
+}
+
+function tag_images()
+{
+    if test -f /usr/local/bin/ctrmgr_tools.py
+    then
+        if [[ x"${TAG_LATEST}" == x"yes" ]]; then
+            /usr/local/bin/ctrmgr_tools.py tag-all
+        fi
+    fi
 }
 
 function stop_sonic_services()
@@ -56,7 +87,7 @@ function show_help_and_exit()
 
 function setup_reboot_variables()
 {
-    NEXT_SONIC_IMAGE=$(sonic_installer list | grep "Next: " | cut -d ' ' -f 2)
+    NEXT_SONIC_IMAGE=$(sonic-installer list | grep "Next: " | cut -d ' ' -f 2)
     IMAGE_PATH="/host/image-${NEXT_SONIC_IMAGE#SONiC-OS-}"
 }
 
@@ -72,10 +103,11 @@ function reboot_pre_check()
     fi
     rm ${filename}
 
-    # Make sure that the next image exists
-    if [[ ! -d ${IMAGE_PATH} ]]; then
-        VERBOSE=yes debug "Next image ${NEXT_SONIC_IMAGE} doesn't exist ..."
-        exit ${EXIT_NEXT_IMAGE_NOT_EXISTS}
+    # Verify the next image by sonic-installer
+    local message=$(sonic-installer verify-next-image 2>&1)
+    if [ $? -ne 0 ]; then
+        VERBOSE=yes debug "Failed to verify next image: ${message}"
+        exit ${EXIT_SONIC_INSTALLER_VERIFY_REBOOT}
     fi
 }
 
@@ -88,6 +120,9 @@ function parse_options()
                 ;;
             v )
                 VERBOSE=yes
+                ;;
+            t )
+                TAG_LATEST=no
                 ;;
         esac
     done
@@ -105,6 +140,9 @@ debug "User requested rebooting device ..."
 
 setup_reboot_variables
 reboot_pre_check
+
+# Tag remotely deployed images as local
+tag_images
 
 # Stop SONiC services gracefully.
 stop_sonic_services
@@ -124,14 +162,27 @@ if [ -x /sbin/hwclock ]; then
     /sbin/hwclock -w || /bin/true
 fi
 
+if [ -x ${DEVPATH}/${PLATFORM}/${SSD_FW_UPDATE} ]; then
+    debug "updating ssd fw for${REBOOT_TYPE}"
+    ${DEVPATH}/${PLATFORM}/${SSD_FW_UPDATE} ${REBOOT_TYPE}
+fi
+
 if [ -x ${DEVPATH}/${PLATFORM}/${PLAT_REBOOT} ]; then
     VERBOSE=yes debug "Rebooting with platform ${PLATFORM} specific tool ..."
     exec ${DEVPATH}/${PLATFORM}/${PLAT_REBOOT} $@
-else
-    # If no platform-specific reboot tool, just run /sbin/reboot
-    exec /sbin/reboot $@
+
+    # There are a couple reasons execution reaches here:
+    #
+    # 1. The vendor platform reboot returned after scheduled the platform specific reboot.
+    #    This is a vendor platform reboot code bug but it happens.
+    # 2. The vendor platform reboot failed. e.g. due to platform driver didn't load properly.
+    #
+    # As result if the reboot script reaches here. We should make the reboot happen.
+    # Sleep 1 second before calling /sbin/reboot to accommodate situation #1 above.
+    sleep 1
+
+    VERBOSE=yes debug "Platform specific reboot failed!" >&2
 fi
 
-# Should never reach here
-VERBOSE=yes debug "Reboot failed!" >&2
-exit 1
+VERBOSE=yes debug "Issuing OS-level reboot ..." >&2
+exec /sbin/reboot $@

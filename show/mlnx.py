@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # main.py
 #
@@ -9,8 +9,6 @@ try:
     import sys
     import subprocess
     import click
-    import sonic_device_util
-    from swsssdk import ConfigDBConnector
     import xml.etree.ElementTree as ET
 except ImportError as e:
     raise ImportError("%s - required module not found" % str(e))
@@ -32,7 +30,7 @@ def run_command(command, display_cmd=False, ignore_error=False, print_to_console
     if display_cmd == True:
         click.echo(click.style("Running command: ", fg='cyan') + click.style(command, fg='green'))
 
-    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(command, shell=True, text=True, stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
 
     if len(out) > 0 and print_to_console:
@@ -97,7 +95,7 @@ def is_issu_status_enabled():
     try:
         sai_xml_path = sai_profile_kvs['SAI_INIT_CONFIG_FILE']
     except KeyError:
-        print >> sys.stderr, "Failed to get SAI XML from sai profile"
+        click.echo("Failed to get SAI XML from sai profile", err=True)
         sys.exit(1)
 
     # Get ISSU from SAI XML
@@ -107,7 +105,7 @@ def is_issu_status_enabled():
     try:
         root = ET.fromstring(sai_xml_content)
     except ET.ParseError:
-        print >> sys.stderr, "Failed to parse SAI xml"
+        click.echo("Failed to parse SAI xml", err=True)
         sys.exit(1)
 
     el = root.find('platform_info').find('issu-enabled')
@@ -126,9 +124,9 @@ def sniffer_status():
     for index in range(len(components)):
         enabled = sniffer_status_get(env_variable_strings[index])
         if enabled is True:
-            print components[index] + " sniffer is enabled"
+            click.echo(components[index] + " sniffer is enabled")
         else:
-            print components[index] + " sniffer is disabled"
+            click.echo(components[index] + " sniffer is disabled")
 
 
 @mlnx.command('issu')
@@ -137,5 +135,5 @@ def issu_status():
 
     res = is_issu_status_enabled()
 
-    print 'ISSU is enabled' if res else 'ISSU is disabled'
+    click.echo('ISSU is enabled' if res else 'ISSU is disabled')
 

@@ -1,5 +1,5 @@
 import click
-from clear.main import *
+from clear.main import ipv6, run_command
 
 
 ###############################################################################
@@ -9,35 +9,23 @@ from clear.main import *
 ###############################################################################
 
 
-@ipv6.group(cls=AliasedGroup, default_if_no_args=True,
-            context_settings=CONTEXT_SETTINGS)
+@ipv6.group()
 def bgp():
     """Clear IPv6 BGP (Border Gateway Protocol) information"""
     pass
 
-
-# Default 'bgp' command (called if no subcommands or their aliases were passed)
-@bgp.command(default=True)
-def default():
-    """Clear all BGP peers"""
-    command = 'sudo vtysh -c "clear ipv6 bgp *"'
-    run_command(command)
-
-
-@bgp.group(cls=AliasedGroup, default_if_no_args=True,
-           context_settings=CONTEXT_SETTINGS)
+@bgp.group()
 def neighbor():
     """Clear specific BGP peers"""
     pass
 
-
-@neighbor.command(default=True)
+@neighbor.command('all')
 @click.argument('ipaddress', required=False)
-def default(ipaddress):
+def neigh_all(ipaddress):
     """Clear all BGP peers"""
 
     if ipaddress is not None:
-        command = 'sudo vtysh -c "clear ipv6 bgp {} "'.format(ipaddress)
+        command = 'sudo vtysh -c "clear ipv6 bgp {}"'.format(ipaddress)
     else:
         command = 'sudo vtysh -c "clear ipv6 bgp *"'
     run_command(command)
@@ -69,20 +57,19 @@ def neigh_out(ipaddress):
     run_command(command)
 
 
-@neighbor.group(cls=AliasedGroup, default_if_no_args=True,
-                context_settings=CONTEXT_SETTINGS)
+@neighbor.group()
 def soft():
     """Soft reconfig BGP's inbound/outbound updates"""
     pass
 
 
-@soft.command(default=True)
+@soft.command('all')
 @click.argument('ipaddress', required=False)
-def default(ipaddress):
+def soft_all(ipaddress):
     """Clear BGP neighbors soft configuration"""
 
     if ipaddress is not None:
-        command = 'sudo vtysh -c "clear ipv6 bgp {} soft "'.format(ipaddress)
+        command = 'sudo vtysh -c "clear ipv6 bgp {} soft"'.format(ipaddress)
     else:
         command = 'sudo vtysh -c "clear ipv6 bgp * soft"'
     run_command(command)

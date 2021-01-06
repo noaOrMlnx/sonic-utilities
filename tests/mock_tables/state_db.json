@@ -1,0 +1,381 @@
+{
+    "TRANSCEIVER_INFO|Ethernet0": {
+        "type": "QSFP28 or later",
+        "hardware_rev": "AC",
+        "serial": "MT1706FT02064",
+        "manufacturer": "Mellanox",
+        "model": "MFA1A00-C003",
+        "vendor_oui": "00-02-c9",
+        "vendor_date": "2017-01-13 ",
+        "connector": "No separable connector",
+        "encoding": "64B66B",
+        "ext_identifier": "Power Class 3(2.5W max), CDR present in Rx Tx",
+        "ext_rateselect_compliance": "QSFP+ Rate Select Version 1",
+        "cable_type": "Length Cable Assembly(m)",
+        "cable_length": "3",
+        "specification_compliance": "{'10/40G Ethernet Compliance Code': '40G Active Cable (XLPPI)'}",
+        "nominal_bit_rate": "255",
+        "application_advertisement": "N/A"
+    },
+    "TRANSCEIVER_DOM_SENSOR|Ethernet0": {
+        "temperature": "30.9258",
+        "voltage": "3.2824",
+        "rx1power": "0.3802",
+        "rx2power": "-0.4871",
+        "rx3power": "-0.0860",
+        "rx4power": "0.3830",
+        "tx1bias": "6.7500",
+        "tx2bias": "6.7500",
+        "tx3bias": "6.7500",
+        "tx4bias": "6.7500",
+        "tx1power": "N/A",
+        "tx2power": "N/A",
+        "tx3power": "N/A",
+        "tx4power": "N/A",
+        "rxpowerhighalarm": "3.4001",
+        "rxpowerhighwarning": "2.4000",
+        "rxpowerlowalarm": "-13.5067",
+        "rxpowerlowwarning": "-9.5001",
+        "txbiashighalarm": "10.0000",
+        "txbiashighwarning": "9.5000",
+        "txbiaslowalarm": "0.5000",
+        "txbiaslowwarning": "1.0000",
+        "temphighalarm": "75.0000",
+        "temphighwarning": "70.0000",
+        "templowalarm": "-5.0000",
+        "templowwarning": "0.0000",
+        "vcchighalarm": "3.6300",
+        "vcchighwarning": "3.4650",
+        "vcclowalarm": "2.9700",
+        "vcclowwarning": "3.1349"
+    },
+    "CHASSIS_INFO|chassis 1": {
+        "psu_num": "2"
+    },
+    "PSU_INFO|PSU 1": {
+        "presence": "true",
+        "status": "true",
+        "led_status": "green"
+    },
+    "PSU_INFO|PSU 2": {
+        "presence": "true",
+        "status": "true",
+        "led_status": "green"
+    },
+    
+    "SWITCH_CAPABILITY|switch": {
+        "MIRROR": "true",
+        "MIRRORV6": "true",
+        "ACL_ACTIONS|INGRESS": "PACKET_ACTION,REDIRECT_ACTION,MIRROR_INGRESS_ACTION",
+        "ACL_ACTIONS|EGRESS": "PACKET_ACTION,MIRROR_EGRESS_ACTION",
+        "ACL_ACTION|PACKET_ACTION": "FORWARD"
+    },
+    "DEBUG_COUNTER_CAPABILITIES|PORT_INGRESS_DROPS": {
+        "reasons": "[IP_HEADER_ERROR,NO_L3_HEADER]",
+        "count": "4"
+    },
+    "DEBUG_COUNTER_CAPABILITIES|SWITCH_EGRESS_DROPS": {
+        "reasons": "[ACL_ANY,L2_ANY,L3_ANY]",
+        "count": "2"
+    },
+    "LAG_MEMBER_TABLE|PortChannel0001|Ethernet112": {
+        "runner.actor_lacpdu_info.state": "5",
+        "runner.state": "disabled",
+        "runner.partner_lacpdu_info.port": "0",
+        "runner.actor_lacpdu_info.port": "113",
+        "runner.selected": "false",
+        "runner.partner_lacpdu_info.state": "0",
+        "ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "runner.partner_lacpdu_info.system": "00:00:00:00:00:00",
+        "link_watches.list.link_watch_0.up": "false",
+        "runner.actor_lacpdu_info.system": "52:54:00:f2:e1:23",
+        "runner.aggregator.selected": "false",
+        "runner.aggregator.id": "0",
+        "link.up": "false",
+        "ifinfo.ifindex": "98"
+    },
+    "LAG_MEMBER_TABLE|PortChannel0002|Ethernet116": {
+        "runner.actor_lacpdu_info.state": "61",
+        "runner.state": "current",
+        "runner.partner_lacpdu_info.port": "1",
+        "runner.actor_lacpdu_info.port": "117",
+        "runner.selected": "true",
+        "runner.partner_lacpdu_info.state": "61",
+        "ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "runner.partner_lacpdu_info.system": "1e:af:77:fc:79:ee",
+        "link_watches.list.link_watch_0.up": "false",
+        "runner.actor_lacpdu_info.system": "52:54:00:f2:e1:23",
+        "runner.aggregator.selected": "true",
+        "runner.aggregator.id": "97",
+        "link.up": "true",
+        "ifinfo.ifindex": "97"
+    },
+    "LAG_MEMBER_TABLE|PortChannel0003|Ethernet120": {
+        "runner.actor_lacpdu_info.state": "61",
+        "runner.state": "current",
+        "runner.partner_lacpdu_info.port": "1",
+        "runner.actor_lacpdu_info.port": "121",
+        "runner.selected": "true",
+        "runner.partner_lacpdu_info.state": "61",
+        "ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "runner.partner_lacpdu_info.system": "16:0e:58:6f:3c:dd",
+        "link_watches.list.link_watch_0.up": "false",
+        "runner.actor_lacpdu_info.system": "52:54:00:f2:e1:23",
+        "runner.aggregator.selected": "true",
+        "runner.aggregator.id": "100",
+        "link.up": "true",
+        "ifinfo.ifindex": "100"
+    },
+    "LAG_TABLE|PortChannel0001": {
+        "runner.fallback": "false",
+        "team_device.ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "team_device.ifinfo.ifindex": "71",
+        "setup.pid": "32",
+        "state": "ok",
+        "runner.fast_rate": "false",
+        "setup.kernel_team_mode_name": "loadbalance",
+        "runner.active": "true"
+    },
+    "LAG_TABLE|PortChannel0002": {
+        "runner.fallback": "false",
+        "team_device.ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "team_device.ifinfo.ifindex": "72",
+        "setup.pid": "40",
+        "state": "ok",
+        "runner.fast_rate": "false",
+        "setup.kernel_team_mode_name": "loadbalance",
+        "runner.active": "true"
+    },
+    "LAG_TABLE|PortChannel0003": {
+        "runner.fallback": "false",
+        "team_device.ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "team_device.ifinfo.ifindex": "73",
+        "setup.pid": "48",
+        "state": "ok",
+        "runner.fast_rate": "false",
+        "setup.kernel_team_mode_name": "loadbalance",
+        "runner.active": "true"
+    },
+    "LAG_TABLE|PortChannel0004": {
+        "runner.fallback": "false",
+        "team_device.ifinfo.dev_addr": "52:54:00:f2:e1:23",
+        "team_device.ifinfo.ifindex": "74",
+        "setup.pid": "56",
+        "state": "ok",
+        "runner.fast_rate": "false",
+        "setup.kernel_team_mode_name": "loadbalance",
+        "runner.active": "true"
+    },
+    "FAN_INFO|fan1": {
+        "drawer_name": "drawer1",
+        "presence": "True",
+        "model": "N/A",
+        "serial": "N/A",
+        "status": "True",
+        "direction": "intake",
+        "speed": "30",
+        "speed_tolerance": "50",
+        "speed_target": "20",
+        "led_status": "red",
+        "timestamp": "20200813 01:32:30"
+    },
+    "FAN_INFO|fan2": {
+        "drawer_name": "drawer2",
+        "presence": "True",
+        "model": "N/A",
+        "serial": "N/A",
+        "status": "False",
+        "direction": "intake",
+        "speed": "50",
+        "speed_tolerance": "50",
+        "speed_target": "50",
+        "led_status": "green",
+        "timestamp": "20200813 01:32:30"
+    },
+    "FAN_INFO|fan3": {
+        "drawer_name": "drawer3",
+        "presence": "True",
+        "model": "N/A",
+        "serial": "N/A",
+        "status": "Updating",
+        "direction": "intake",
+        "speed": "50",
+        "speed_tolerance": "50",
+        "speed_target": "50",
+        "led_status": "green",
+        "timestamp": "20200813 01:32:30"
+    },
+    "FG_ROUTE_TABLE|fc:5::/128": {
+ 	"0": "200:200:200:200::4@Vlan1000",
+	"1": "200:200:200:200::4@Vlan1000",
+	"2": "200:200:200:200::4@Vlan1000",
+	"3": "200:200:200:200::4@Vlan1000",
+	"4": "200:200:200:200::4@Vlan1000",
+	"5" : "200:200:200:200::4@Vlan1000",
+	"6" : "200:200:200:200::4@Vlan1000",
+	"7" : "200:200:200:200::4@Vlan1000",
+	"8" : "200:200:200:200::4@Vlan1000",
+	"9" : "200:200:200:200::4@Vlan1000",
+	"10" : "200:200:200:200::4@Vlan1000",
+	"11" : "200:200:200:200::4@Vlan1000",
+	"12" : "200:200:200:200::4@Vlan1000",
+	"13" : "200:200:200:200::4@Vlan1000",
+	"14" : "200:200:200:200::4@Vlan1000",
+	"15" : "200:200:200:200::4@Vlan1000",
+	"16" : "200:200:200:200::5@Vlan1000",
+	"17" : "200:200:200:200::5@Vlan1000",
+	"18" : "200:200:200:200::5@Vlan1000",
+	"19" : "200:200:200:200::5@Vlan1000",
+	"20" : "200:200:200:200::5@Vlan1000",
+	"21" : "200:200:200:200::5@Vlan1000",
+	"22" : "200:200:200:200::5@Vlan1000",
+	"23" : "200:200:200:200::5@Vlan1000",
+	"24" : "200:200:200:200::5@Vlan1000",
+	"25" : "200:200:200:200::5@Vlan1000",
+	"26" : "200:200:200:200::5@Vlan1000",
+	"27" : "200:200:200:200::5@Vlan1000",
+	"28" : "200:200:200:200::5@Vlan1000",
+	"29" : "200:200:200:200::5@Vlan1000",
+	"30" : "200:200:200:200::5@Vlan1000",
+	"31" : "200:200:200:200::5@Vlan1000"	
+    },
+    "FG_ROUTE_TABLE|100.50.25.12/32": {
+ 	"0": "200.200.200.4@Vlan1000",
+	"1": "200.200.200.4@Vlan1000",
+	"2": "200.200.200.4@Vlan1000",
+	"3": "200.200.200.4@Vlan1000",
+	"4": "200.200.200.4@Vlan1000",
+	"5" : "200.200.200.4@Vlan1000",
+	"6" : "200.200.200.4@Vlan1000",
+	"7" : "200.200.200.4@Vlan1000",
+	"8" : "200.200.200.4@Vlan1000",
+	"9" : "200.200.200.4@Vlan1000",
+	"10" : "200.200.200.4@Vlan1000",
+	"11" : "200.200.200.4@Vlan1000",
+	"12" : "200.200.200.4@Vlan1000",
+	"13" : "200.200.200.4@Vlan1000",
+	"14" : "200.200.200.4@Vlan1000",
+	"15" : "200.200.200.4@Vlan1000",
+	"16" : "200.200.200.5@Vlan1000",
+	"17" : "200.200.200.5@Vlan1000",
+	"18" : "200.200.200.5@Vlan1000",
+	"19" : "200.200.200.5@Vlan1000",
+	"20" : "200.200.200.5@Vlan1000",
+	"21" : "200.200.200.5@Vlan1000",
+	"22" : "200.200.200.5@Vlan1000",
+	"23" : "200.200.200.5@Vlan1000",
+	"24" : "200.200.200.5@Vlan1000",
+	"25" : "200.200.200.5@Vlan1000",
+	"26" : "200.200.200.5@Vlan1000",
+	"27" : "200.200.200.5@Vlan1000",
+	"28" : "200.200.200.5@Vlan1000",
+	"29" : "200.200.200.5@Vlan1000",
+	"30" : "200.200.200.5@Vlan1000",
+	"31" : "200.200.200.5@Vlan1000"	
+    },
+    "REBOOT_CAUSE|2020_10_09_04_53_58": {
+        "cause": "warm-reboot",
+        "time": "Fri Oct  9 04:51:47 UTC 2020",
+        "user": "admin",
+        "comment": "N/A"
+    },
+    "REBOOT_CAUSE|2020_10_09_02_33_06": {
+        "cause": "reboot",
+        "time": "Fri Oct  9 02:29:44 UTC 2020",
+        "user": "admin",
+        "comment": "N/A"
+    },
+    "CHASSIS_TABLE|CHASSIS 1": {
+        "module_num": "5"
+    },
+    "CHASSIS_MODULE_TABLE|SUPERVISOR0": {
+        "desc": "supervisor-card",
+        "oper_status": "Online",
+        "slot": "16"
+    },
+    "CHASSIS_MODULE_TABLE|LINE-CARD0": {
+        "desc": "line-card",
+        "oper_status": "Empty",
+        "slot": "1"
+    },
+    "CHASSIS_MODULE_TABLE|LINE-CARD1": {
+        "desc": "line-card",
+        "oper_status": "Online",
+        "slot": "2"
+    },
+    "CHASSIS_MODULE_TABLE|FABRIC-CARD0": {
+        "desc": "fabric-card",
+        "oper_status": "Online",
+        "slot": "17"
+    },
+    "CHASSIS_MODULE_TABLE|FABRIC-CARD1": {
+        "desc": "fabric-card",
+        "oper_status": "Offline",
+        "slot": "18"
+    },
+    "MUX_CABLE_TABLE|Ethernet32": {
+        "state": "active"
+    },
+    "MUX_CABLE_TABLE|Ethernet0": {
+        "state": "active"
+    },
+    "MUX_CABLE_TABLE|Ethernet4": {
+        "state": "standby"
+    },
+    "MUX_CABLE_TABLE|Ethernet8": {
+        "state": "standby"
+    },
+    "MUX_CABLE_TABLE|Ethernet12": {
+        "state": "unknown"
+    },
+    "VXLAN_TUNNEL_TABLE|EVPN_25.25.25.25": {
+        "src_ip": "1.1.1.1",
+        "dst_ip": "25.25.25.25",
+        "tnl_src": "EVPN",
+        "operstatus": "down"
+    },
+    "VXLAN_TUNNEL_TABLE|EVPN_25.25.25.26": {
+        "src_ip": "1.1.1.1",
+        "dst_ip": "25.25.25.26",
+        "tnl_src": "EVPN",
+        "operstatus": "down"
+    },
+    "VXLAN_TUNNEL_TABLE|EVPN_25.25.25.27": {
+        "src_ip": "1.1.1.1",
+        "dst_ip": "25.25.25.27",
+        "tnl_src": "EVPN",
+        "operstatus": "down"
+    },
+    "BUFFER_POOL_TABLE|egress_lossless_pool": {
+        "mode": "dynamic",
+        "size": "13945824",
+        "type": "egress"
+    },
+    "BUFFER_POOL_TABLE|egress_lossy_pool": {
+        "mode": "dynamic",
+        "size": "4580864",
+        "type": "egress"
+    },
+    "BUFFER_POOL_TABLE|ingress_lossless_pool": {
+        "mode": "dynamic",
+        "size": "4580864",
+        "type": "ingress"
+    },
+    "BUFFER_POOL_TABLE|ingress_lossy_pool": {
+        "mode": "dynamic",
+        "size": "4580864",
+        "type": "ingress"
+    },
+    "BUFFER_PROFILE_TABLE|ingress_lossy_profile": {
+        "dynamic_th": "3",
+        "pool": "[BUFFER_POOL_TABLE|ingress_lossy_pool]",
+        "size": "0"
+    },
+    "BUFFER_PROFILE_TABLE|headroom_profile": {
+        "dynamic_th": "0",
+        "pool": "[BUFFER_POOL_TABLE|ingress_lossless_pool]",
+        "xon": "18432",
+        "xoff": "32768",
+        "size": "51200"
+    }
+}

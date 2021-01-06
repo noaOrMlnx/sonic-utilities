@@ -1,15 +1,9 @@
-#! /usr/bin/python -u
-# date: 07/12/17
-
 import click
-import os
 import subprocess
-from click_default_group import DefaultGroup
-from pprint import pprint
 
 def run_command(command, pager=False):
     click.echo(click.style("Command: ", fg='cyan') + click.style(command, fg='green'))
-    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+    p = subprocess.Popen(command, shell=True, text=True, stdout=subprocess.PIPE)
     output = p.stdout.read()
     if pager:
         click.echo_via_pager(output)
@@ -28,7 +22,7 @@ def cli():
     pass
 
 
-p = subprocess.check_output(["sudo vtysh -c 'show version'"], shell=True)
+p = subprocess.check_output(["sudo vtysh -c 'show version'"], shell=True, text=True)
 if 'FRRouting' in p:
     #
     # 'bgp' group for FRR ###
@@ -38,7 +32,7 @@ if 'FRRouting' in p:
         """debug bgp group """
         pass
 
-    @bgp.command()
+    @bgp.command('allow-martians')
     def allow_martians():
         """BGP allow martian next hops"""
         command = 'sudo vtysh -c "debug bgp allow-martians"'
@@ -71,7 +65,7 @@ if 'FRRouting' in p:
         command += '"'
         run_command(command)
 
-    @bgp.command()
+    @bgp.command('neighbor-events')
     @click.argument('prefix_or_iface', required=False)
     def neighbor_events(prefix_or_iface):
         """BGP Neighbor Events"""
@@ -97,7 +91,7 @@ if 'FRRouting' in p:
         command += '"'
         run_command(command)
 
-    @bgp.command()
+    @bgp.command('update-groups')
     def update_groups():
         """BGP update-groups"""
         command = 'sudo vtysh -c "debug bgp update-groups"'
@@ -194,17 +188,13 @@ else:
     #
     # 'bgp' group for quagga ###
     #
-    @cli.group(cls=DefaultGroup, default_if_no_args=True)
-    #@cli.group()
-    def bgp():
-        """debug bgp on """
-        pass
-
-    @bgp.command(default=True)
-    def default():
-        """debug bgp"""
-        command = 'sudo vtysh -c "debug bgp"'
-        run_command(command)
+    @cli.group(invoke_without_command=True)
+    @click.pass_context
+    def bgp(ctx):
+        """debug bgp on"""
+        if ctx.invoked_subcommand is None:
+            command = 'sudo vtysh -c "debug bgp"'
+            run_command(command)
 
     @bgp.command()
     def events():

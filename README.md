@@ -1,13 +1,79 @@
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/Azure/sonic-utilities.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-utilities/alerts/)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Azure/sonic-utilities.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Azure/sonic-utilities/context:python)
+
+[![Build](https://sonic-jenkins.westus2.cloudapp.azure.com/job/common/job/sonic-utilities-build/badge/icon)](https://sonic-jenkins.westus2.cloudapp.azure.com/job/common/job/sonic-utilities-build/)
+
 # SONiC: Software for Open Networking in the Cloud
 
 ## sonic-utilities
 
 Command-line utilities for SONiC
 
-## How to run unit test
-```python
-python2 -m py.test -v
+This repository produces two packages, as follows:
+
+### sonic-utilities
+
+A Python wheel package, containing all the Python source code for the command-line utilities
+
+#### Setting up a build/test environment
+
+The sonic-utilities package depends on a number of other packages, many of which are available via PyPI, but some are part of the SONiC codebase. When building/testing the package, setuptools/pip will attempt to install the packages available from PyPI. However, you will need to manually build and install the SONiC dependencies before attempting to build or test the package.
+
+Currently, this list of dependencies is as follows:
+
+
+- libyang_1.0.73_amd64.deb
+- libyang-cpp_1.0.73_amd64.deb
+- python3-yang_1.0.73_amd64.deb
+- redis_dump_load-1.1-py3-none-any.whl
+- swsssdk-2.0.1-py3-none-any.whl
+- sonic_py_common-1.0-py3-none-any.whl
+- sonic_config_engine-1.0-py3-none-any.whl
+- sonic_yang_mgmt-1.0-py3-none-any.whl
+- sonic_yang_models-1.0-py3-none-any.whl
+
+
+A convenient alternative is to let the SONiC build system configure a build enviroment for you. This can be done by cloning the [sonic-buildimage](https://github.com/Azure/sonic-buildimage) repo, building the sonic-utilities package inside the Debian Buster slave container, and staying inside the container once the build finishes. During the build process, the SONiC build system will build and install all the necessary dependencies inside the container. After following the instructions to clone and initialize the sonic-buildimage repo, this can be done as follows:
+
+1. Configure the build environment for an ASIC type (any type will do, here we use `generic`)
+    ```
+    make configure PLATFORM=generic
+    ```
+
+2. Build the sonic-utilities Python wheel package inside the Buster slave container, and tell the build system to keep the container alive when finished
+    ```
+    make NOJESSIE=1 NOSTRETCH=1 KEEP_SLAVE_ON=yes target/python-wheels/sonic_utilities-1.2-py3-none-any.whl
+    ```
+
+3. When the build finishes, your prompt will change to indicate you are inside the slave container. Change into the `src/sonic-utilities/` directory
+    ```
+    user@911799f161a0:/sonic$ cd src/sonic-utilities/
+    ```
+
+4. You can now make changes to the sonic-utilities source and build the package or run unit tests with the commands below. When finished, you can exit the container by calling `exit`.
+
+#### To build
+
 ```
+python3 setup.py bdist_wheel
+```
+
+#### To run unit tests
+
+```
+python3 setup.py test
+```
+
+
+### sonic-utilities-data
+
+A Debian package, containing data files needed by the utilities (bash_completion files, Jinja2 templates, etc.)
+
+#### To build
+
+Instructions for building the sonic-utilities-data package can be found in [sonic-utilities-data/README.md](https://github.com/Azure/sonic-utilities/blob/master/sonic-utilities-data/README.md)
+
+---
 
 ## Contribution guide
 
@@ -23,21 +89,21 @@ Guide for performing commits:
 * Use a standard commit message format:
 
 >     [component/folder touched]: Description intent of your changes
-> 
+>
 >     [List of changes]
->     
+>
 > 	  Signed-off-by: Your Name your@email.com
-    
+
 For example:
 
 >     swss-common: Stabilize the ConsumerTable
->     
+>
 >     * Fixing autoreconf
 >     * Fixing unit-tests by adding checkers and initialize the DB before start
 >     * Adding the ability to select from multiple channels
->     * Health-Monitor - The idea of the patch is that if something went wrong with the notification channel, 
+>     * Health-Monitor - The idea of the patch is that if something went wrong with the notification channel,
 >       we will have the option to know about it (Query the LLEN table length).
->       
+>
 >       Signed-off-by: John Doe user@dev.null
 
 

@@ -1,0 +1,182 @@
+{
+    "SFLOW_SESSION_TABLE:Ethernet0": {
+        "admin_state": "up",
+        "sample_rate": "2500"
+    },
+    "SFLOW_SESSION_TABLE:Ethernet4": {
+        "admin_state": "up",
+        "sample_rate": "1000"
+    },
+    "SFLOW_SESSION_TABLE:Ethernet112": {
+        "admin_state": "up",
+        "sample_rate": "1000"
+    },
+    "SFLOW_SESSION_TABLE:Ethernet116": {
+        "admin_state": "up",
+        "sample_rate": "5000"
+    },
+    "SFLOW_SESSION_TABLE:Ethernet8": {
+        "BAD": "BAD"
+    },
+    "SFLOW_SESSION_TABLE:Ethernet12": {
+        "sample_rate": "5000"
+    },
+    "SFLOW_SESSION_TABLE:Ethernet16": {
+        "admin_state": "up"
+    },
+    "PORT_TABLE:Ethernet0": {
+        "index": "0",
+        "lanes": "0",
+        "alias": "Ethernet0",
+        "description": "ARISTA01T2:Ethernet1",
+        "speed": "25000",
+        "oper_status": "down",
+        "pfc_asym": "off",
+        "mtu": "9100",
+        "fec": "rs",
+        "admin_status": "up"
+    },
+    "PORT_TABLE:Ethernet32": {
+        "index": "8",
+        "lanes": "13,14,15,16",
+        "alias": "etp9",
+        "description": "Servers7:eth0",
+        "speed": "40000",
+        "oper_status": "up",
+        "pfc_asym": "off",
+        "mtu": "9100",
+        "fec": "rs",
+        "admin_status": "up"
+    },
+    "PORT_TABLE:Ethernet112": {
+        "index": "28",
+        "lanes": "93,94,95,96",
+        "alias": "etp29",
+        "description": "ARISTA01T1:Ethernet1",
+        "speed": "40000",
+        "oper_status": "up",
+        "pfc_asym": "off",
+        "mtu": "9100",
+        "fec": "rs",
+        "admin_status": "up"
+    },
+    "PORT_TABLE:Ethernet116": {
+        "index": "29",
+        "lanes": "89,90,91,92",
+        "alias": "etp30",
+        "description": "ARISTA02T1:Ethernet1",
+        "speed": "40000",
+        "oper_status": "up",
+        "pfc_asym": "off",
+        "mtu": "9100",
+        "fec": "rs",
+        "admin_status": "up"
+    },
+    "PORT_TABLE:Ethernet120": {
+        "index": "30",
+        "lanes": "101,102,103,104",
+        "alias": "etp31",
+        "description": "ARISTA03T1:Ethernet1",
+        "speed": "40000",
+        "oper_status": "up",
+        "pfc_asym": "off",
+        "mtu": "9100",
+        "fec": "rs",
+        "admin_status": "up"
+    },
+    "PORT_TABLE:Ethernet124": {
+        "index": "31",
+        "lanes": "97,98,99,100",
+        "alias": "etp32",
+        "description": "ARISTA04T1:Ethernet1",
+        "speed": "40000",
+        "oper_status": "up",
+        "pfc_asym": "off",
+        "mtu": "9100",
+        "fec": "rs",
+        "admin_status": "up"
+    },
+    "PORT_TABLE:Ethernet200": {
+        "index": "200",
+        "lanes": "200,201,202,203",
+        "alias": "Ethernet200",
+        "description": "Ethernet200",
+        "speed": "100000",
+        "oper_status": "down",
+        "fec": "rs",
+        "mtu": "9100",
+        "pfc_asym": "off",
+        "admin_status": "up"
+    },
+    "INTF_TABLE:Ethernet0.10": {
+        "admin_status": "up"
+    },
+    "_GEARBOX_TABLE:phy:1": {
+        "name": "sesto-1",
+        "phy_id": "1",
+        "phy_oid": "0x21000000000002",
+        "firmware_major_version": "v0.2"
+    },
+    "_GEARBOX_TABLE:phy:2": {
+        "name": "sesto-2",
+        "phy_id": "2",
+        "phy_oid": "0x21000000000003",
+        "firmware_major_version": "v0.3"
+    },
+    "_GEARBOX_TABLE:interface:200": {
+        "name": "Ethernet200",
+        "index": "200",
+        "line_lanes": "304,305",
+        "phy_id": "1",
+        "system_lanes": "300,301,302,303"
+    },
+    "_GEARBOX_TABLE:phy:1:ports:200": {
+        "index": "200",
+        "line_speed": "50000",
+        "system_speed": "25000"
+    },
+    "LAG_MEMBER_TABLE:PortChannel0001:Ethernet112": {
+        "status": "disabled"
+    },
+    "LAG_MEMBER_TABLE:PortChannel0002:Ethernet116": {
+        "status": "enabled"
+    },
+    "LAG_MEMBER_TABLE:PortChannel0003:Ethernet120": {
+        "status": "enabled"
+    },
+    "LAG_MEMBER_TABLE:PortChannel0004:Ethernet124": {
+        "status": "enabled"
+    },
+    "LAG_TABLE:PortChannel0001": {
+        "admin_status": "up",
+        "mtu": "9100",
+        "oper_status": "down"
+    },
+    "LAG_TABLE:PortChannel0002": {
+        "admin_status": "up",
+        "mtu": "9100",
+        "oper_status": "up"
+    },
+    "LAG_TABLE:PortChannel0003": {
+        "admin_status": "up",
+        "mtu": "9100",
+        "oper_status": "up"
+    },
+    "LAG_TABLE:PortChannel0004": {
+        "admin_status": "up",
+        "mtu": "9100",
+        "oper_status": "up"
+    },
+    "SWITCH_TABLE:switch": {
+        "vxlan_port": "13550"
+    },
+    "VXLAN_REMOTE_VNI_TABLE:Vlan200:25.25.25.25": {
+        "vni": "200"
+    },
+    "VXLAN_REMOTE_VNI_TABLE:Vlan200:25.25.25.26": {
+        "vni": "200"
+    },
+    "VXLAN_REMOTE_VNI_TABLE:Vlan200:25.25.25.27": {
+        "vni": "200"
+    }
+}

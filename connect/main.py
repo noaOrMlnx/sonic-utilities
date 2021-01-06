@@ -1,19 +1,9 @@
-#! /usr/bin/python -u
-
-import click
-import errno
+import configparser
 import os
 import pexpect
-import subprocess
 import sys
-from click_default_group import DefaultGroup
 
-try:
-    # noinspection PyPep8Naming
-    import ConfigParser as configparser
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    import configparser
+import click
 
 
 # This is from the aliases example:
@@ -38,12 +28,9 @@ class Config(object):
 _config = None
 
 
-# This aliased group has been modified from click examples to inherit from DefaultGroup instead of click.Group.
-# DefaultGroup is a superclass of click.Group which calls a default subcommand instead of showing
-# a help message if no subcommand is passed
-class AliasedGroup(DefaultGroup):
-    """This subclass of a DefaultGroup supports looking up aliases in a config
-    file and with a bit of magic.
+class AliasedGroup(click.Group):
+    """This subclass of click.Group supports abbreviations and
+       looking up aliases in a config file with a bit of magic.
     """
 
     def get_command(self, ctx, cmd_name):
@@ -74,12 +61,9 @@ class AliasedGroup(DefaultGroup):
         matches = [x for x in self.list_commands(ctx)
                    if x.lower().startswith(cmd_name.lower())]
         if not matches:
-            # No command name matched. Issue Default command.
-            ctx.arg0 = cmd_name
-            cmd_name = self.default_cmd_name
-            return DefaultGroup.get_command(self, ctx, cmd_name)
+            return None
         elif len(matches) == 1:
-            return DefaultGroup.get_command(self, ctx, matches[0])
+            return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
 
 def run_command(command, display_cmd=False):
@@ -88,6 +72,8 @@ def run_command(command, display_cmd=False):
 
     proc = pexpect.spawn(command)
     proc.interact()
+    proc.close()
+    return proc.exitstatus
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help', '-?'])
 
@@ -105,11 +91,12 @@ def connect():
 # 'line' command ("connect line")
 #
 @connect.command('line')
-@click.argument('linenum')
-def line(linenum):
+@click.argument('target')
+@click.option('--devicename', '-d', is_flag=True, help="connect by name - if flag is set, interpret target as device name instead")
+def line(target, devicename):
     """Connect to line LINENUM via serial connection"""
-    cmd = "consutil connect " + linenum
-    run_command(cmd)
+    cmd = "consutil connect {}".format("--devicename " if devicename else "") + str(target)
+    sys.exit(run_command(cmd))
 
 #
 # 'device' command ("connect device")
@@ -119,7 +106,7 @@ def line(linenum):
 def device(devicename):
     """Connect to device DEVICENAME via serial connection"""
     cmd = "consutil connect -d " + devicename
-    run_command(cmd)
+    sys.exit(run_command(cmd))
 
 if __name__ == '__main__':
     connect()

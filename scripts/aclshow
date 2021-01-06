@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 """
 using aclshow to display SONiC switch acl rules and counters
 
@@ -16,18 +17,13 @@ optional arguments:
   -t TABLES, --tables TABLES  action by specific tables list: Table_1,Table_2
 """
 
-from __future__ import print_function
-
 import argparse
 import json
 import os
-import re
-import subprocess
 import swsssdk
 import sys
 
 from tabulate import tabulate
-from natsort import natsorted
 
 ### temp file to save counter positions when doing clear counter action.
 ### if we could have a SAI command to clear counters will be better, so no need to maintain
@@ -95,11 +91,8 @@ class AclStat(object):
         read redis database for acl counters
         """
 
-        def qstrip(string):
-            return string.strip().strip(" \"").rstrip("\"")
-
         def lowercase_keys(dictionary):
-            return dict((k.lower(), v) for k,v in dictionary.iteritems()) if dictionary else None
+            return dict((k.lower(), v) for k, v in dictionary.items()) if dictionary else None
 
         def fetch_acl_tables():
             """
@@ -131,9 +124,7 @@ class AclStat(object):
             """
             Get ACL counters from the DB
             """
-            acl_counters_cmd = "docker exec -it database redis-cli --csv -n 2 hgetall COUNTERS:"
-            counters_cnt = len(self.acl_rules) # num of counters should be the same as rules
-            for table, rule in self.acl_rules.keys():
+            for table, rule in self.acl_rules:
                 cnt_props = lowercase_keys(self.db.get_all(self.db.COUNTERS_DB, "COUNTERS:%s:%s" % (table, rule)))
                 self.acl_counters[table, rule] = cnt_props
 
@@ -172,13 +163,17 @@ class AclStat(object):
 
         header = ACL_HEADER
         aclstat = []
-        for rule_key in self.acl_rules.keys():
+        for rule_key in self.acl_rules:
             if not display_all and (self.get_counter_value(rule_key, 'packets') == '0' or \
                     self.get_counter_value(rule_key, 'packets') == 'N/A'):
                 continue
             rule = self.acl_rules[rule_key]
+            rule_priority = -1
+            for key,val in rule.items():
+                if key.upper() == "PRIORITY":
+                    rule_priority = val
             line = [rule_key[1], rule_key[0],
-                    rule['PRIORITY'],
+                    rule_priority,
                     self.get_counter_value(rule_key, 'packets'),
                     self.get_counter_value(rule_key, 'bytes')]
             aclstat.append(line)
@@ -192,19 +187,19 @@ class AclStat(object):
         clear counters -- write current counters to file in /tmp
         """
         def remap_keys(dict):
-            return [{'key':k, 'value': v} for k, v in dict.iteritems()]
+            return [{'key': k, 'value': v} for k, v in dict.items()]
 
-        with open(COUNTER_POSITION, 'wb') as fp:
+        with open(COUNTER_POSITION, 'w') as fp:
             json.dump(remap_keys(self.acl_counters), fp)
 
 def main():
     parser = argparse.ArgumentParser(description='Display SONiC switch Acl Rules and Counters',
-                                     version='1.0.0',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-a', '--all', action='store_true', help='Show all ACL counters')
     parser.add_argument('-c', '--clear', action='store_true', help='Clear ACL counters statistics')
     parser.add_argument('-r', '--rules', type=str, help='action by specific rules list: Rule1_Name,Rule2_Name', default=None)
     parser.add_argument('-t', '--tables', type=str, help='action by specific tables list: Table1_Name,Table2_Name', default=None)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument('-vv', '--verbose', action='store_true', help='Verbose output', default=False)
     args = parser.parse_args()
 
@@ -217,7 +212,7 @@ def main():
         acls.previous_counters()
         acls.display_acl_stat(args.all)
     except Exception as e:
-        print(e.message, file=sys.stderr)
+        print(str(e), file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":

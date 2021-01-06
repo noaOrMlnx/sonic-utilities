@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 """
 ecnconfig is the utility to
 
@@ -46,12 +47,10 @@ $ecnconfig -q 3
 ECN status:
 queue 3: on
 """
-from __future__ import print_function
-
+import argparse
 import os
 import sys
-import json
-import argparse
+
 import swsssdk
 from tabulate import tabulate
 
@@ -199,7 +198,7 @@ class EcnQ(object):
             port_table = self.config_db.get_table(DEVICE_NEIGHBOR_TABLE_NAME)
             self.ports_key = port_table.keys()
 
-            self.ports_key.sort(key = lambda k: int(k[8:]))
+            self.ports_key = sorted(self.ports_key, key = lambda k: int(k[8:]))
 
     def set(self, enable):
         if os.geteuid() != 0:
@@ -232,7 +231,6 @@ def main():
     parser = argparse.ArgumentParser(description='Show and change:\n'
                                                  '1) ECN WRED configuration\n'
                                                  '2) ECN on/off status on queues',
-                                     version='1.0.0',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-l', '--list', action='store_true', help='show ECN WRED configuration')
@@ -246,6 +244,7 @@ def main():
     parser.add_argument('-gdrop', '--green-drop-prob', type=str, help='set max drop/mark probability for packets marked \'green\'', default=None)
     parser.add_argument('-ydrop', '--yellow-drop-prob', type=str, help='set max drop/mark probability for packets marked \'yellow\'', default=None)
     parser.add_argument('-rdrop', '--red-drop-prob', type=str, help='set max drop/mark probability for packets marked \'red\'', default=None)
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
     parser.add_argument('-vv', '--verbose', action='store_true', help='Verbose output', default=False)
 
     parser.add_argument('command', nargs='?', choices=['on', 'off'], type=str, help='turn on/off ecn', default=None)
@@ -266,7 +265,7 @@ def main():
 
                 # get current configuration data 
                 wred_profile_data = prof_cfg.get_profile_data(args.profile)
-                if wred_profile_data == None:
+                if wred_profile_data is None:
                     raise Exception("Input arguments error. Invalid WRED profile %s" % (args.profile))
 
                 if args.green_max:
@@ -327,7 +326,7 @@ def main():
             sys.exit(1)
 
     except Exception as e:
-        print("Exception caught: ", e.message, file=sys.stderr)
+        print("Exception caught: ", str(e), file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":

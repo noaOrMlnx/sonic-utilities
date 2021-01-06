@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 ## Script to list partition information and set the boot partition
 
 import re
@@ -52,7 +52,7 @@ def print_partitions(blkdev):
         index = m.group(3)
         if name != blkdev or not index:
             continue
-        print index, label
+        print(index, label)
 
 ## Get the current boot partition index
 def get_boot_partition(blkdev):
@@ -62,12 +62,13 @@ def get_boot_partition(blkdev):
     ## Parse command output and return the current boot partition index
     for line in out.splitlines():
         m = re.match(r'{0}(\d+) / .*'.format(blkdev), line)
-        if not m: continue
+        if not m:
+            continue
         index = m.group(1)
         return int(index)
-    else:
-        logger.error('Unexpected /proc/mounts output: %s', out)
-        return None
+
+    logger.error('Unexpected /proc/mounts output: %s', out)
+    return None
 
 def set_boot_partition(blkdev, index):
     ## Mount the partition
@@ -116,7 +117,7 @@ def main():
     if cur is None:
         logger.error('Failed to get boot partition')
         return -1
-    print 'Current rootfs partition is: {0}'.format(cur)
+    print('Current rootfs partition is: {0}'.format(cur))
 
     ## Handle the command line
     if args.index is None:

@@ -5,16 +5,8 @@
 # under scripts/. Consider stop using scripts and use console_scripts instead
 #
 # https://stackoverflow.com/questions/18787036/difference-between-entry-points-console-scripts-and-scripts-in-setup-py
-try:
-    import fastentrypoints
-except ImportError:
-    from setuptools.command import easy_install
-    import pkg_resources
-    easy_install.main(['fastentrypoints'])
-    pkg_resources.require('fastentrypoints')
-    import fastentrypoints
+import fastentrypoints
 
-import glob
 from setuptools import setup
 
 setup(
@@ -41,20 +33,41 @@ setup(
         'ssdutil',
         'pfc',
         'psuutil',
+        'fdbutil',
+        'fwutil',
+        'pcieutil',
+        'pddf_fanutil',
+        'pddf_psuutil',
+        'pddf_thermalutil',
+        'pddf_ledutil',
         'show',
+        'show.interfaces',
         'sonic_installer',
-        'sonic-utilities-tests',
+        'sonic_installer.bootloader',
+        'tests',
         'undebug',
         'utilities_common',
+        'watchdogutil',
     ],
     package_data={
         'show': ['aliases.ini'],
-        'sonic-utilities-tests': ['acl_input/*', 'mock_tables/*.py', 'mock_tables/*.json']
+        'sonic_installer': ['aliases.ini'],
+        'tests': ['acl_input/*',
+                  'counterpoll_input/*',
+                  'mock_tables/*.py',
+                  'mock_tables/*.json',
+                  'mock_tables/asic0/*.json',
+                  'mock_tables/asic1/*.json',
+                  'mock_tables/asic2/*.json',
+                  'filter_fdb_input/*',
+                  'pfcwd_input/*',
+                  'wm_input/*']
     },
     scripts=[
         'scripts/aclshow',
         'scripts/asic_config_check',
         'scripts/boot_part',
+        'scripts/buffershow',
         'scripts/coredump-compress',
         'scripts/configlet',
         'scripts/db_migrator.py',
@@ -62,16 +75,24 @@ setup(
         'scripts/dropcheck',
         'scripts/dropconfig',
         'scripts/dropstat',
+        'scripts/dump_nat_entries.py',
         'scripts/ecnconfig',
+        'scripts/fanshow',
         'scripts/fast-reboot',
         'scripts/fast-reboot-dump.py',
         'scripts/fdbclear',
         'scripts/fdbshow',
+        'scripts/gearboxutil',
         'scripts/generate_dump',
         'scripts/intfutil',
         'scripts/intfstat',
         'scripts/lldpshow',
+        'scripts/log_ssd_health',
+        'scripts/mellanox_buffer_migrator.py',
         'scripts/mmuconfig',
+        'scripts/natclear',
+        'scripts/natconfig',
+        'scripts/natshow',
         'scripts/nbrshow',
         'scripts/neighbor_advertiser',
         'scripts/pcmping',
@@ -85,13 +106,14 @@ setup(
         'scripts/route_check.py',
         'scripts/route_check_test.sh',
         'scripts/sfpshow',
-        'scripts/teamshow',
+        'scripts/syseeprom-to-json',
+        'scripts/tempershow',
+        'scripts/update_json.py',
         'scripts/warm-reboot',
         'scripts/watermarkstat',
-        'scripts/watermarkcfg'
-    ],
-    data_files=[
-        ('/etc/bash_completion.d', glob.glob('data/etc/bash_completion.d/*')),
+        'scripts/watermarkcfg',
+        'scripts/sonic-kdump-config',
+        'scripts/centralize_database'
     ],
     entry_points={
         'console_scripts': [
@@ -102,38 +124,50 @@ setup(
             'counterpoll = counterpoll.main:cli',
             'crm = crm.main:cli',
             'debug = debug.main:cli',
+            'filter_fdb_entries = fdbutil.filter_fdb_entries:main',
             'pfcwd = pfcwd.main:cli',
             'sfputil = sfputil.main:cli',
             'ssdutil = ssdutil.main:ssdutil',
             'pfc = pfc.main:cli',
             'psuutil = psuutil.main:cli',
+            'fwutil = fwutil.main:cli',
+            'pcieutil = pcieutil.main:cli',
+            'pddf_fanutil = pddf_fanutil.main:cli',
+            'pddf_psuutil = pddf_psuutil.main:cli',
+            'pddf_thermalutil = pddf_thermalutil.main:cli',
+            'pddf_ledutil = pddf_ledutil.main:cli',
             'show = show.main:cli',
             'sonic-clear = clear.main:cli',
-            'sonic_installer = sonic_installer.main:cli',
+            'sonic-installer = sonic_installer.main:sonic_installer',
+            'sonic_installer = sonic_installer.main:sonic_installer',  # Deprecated
             'undebug = undebug.main:cli',
+            'watchdogutil = watchdogutil.main:watchdogutil',
         ]
     },
-    # NOTE: sonic-utilities also depends on other packages that are either only
-    # available as .whl files or the latest available Debian packages are
-    # out-of-date and we must install newer versions via pip. These
-    # dependencies cannot be listed here, as this package is built as a .deb,
-    # therefore all dependencies will be assumed to also be available as .debs.
-    # These unlistable dependencies are as follows:
-    # - sonic-config-engine
-    # - swsssdk
-    # - tabulate
     install_requires=[
-        'click-default-group',
-        'click',
-        'natsort'
+        'click==7.0',
+        'ipaddress==1.0.23',
+        'jsondiff==1.2.0',
+        'm2crypto==0.31.0',
+        'natsort==6.2.1',  # 6.2.1 is the last version which supports Python 2. Can update once we no longer support Python 2
+        'netaddr==0.8.0',
+        'netifaces==0.10.7',
+        'pexpect==4.8.0',
+        'requests==2.25.0',
+        'sonic-py-common',
+        'sonic-yang-mgmt',
+        'swsssdk>=2.0.1',
+        'tabulate==0.8.2',
+        'xmltodict==0.12.0',
     ],
     setup_requires= [
-        'pytest-runner'
+        'pytest-runner',
+        'wheel'
     ],
     tests_require = [
         'pytest',
-        'mock>=2.0.0',
-        'mockredispy>=2.9.3'
+        'mockredispy>=2.9.3',
+        'sonic-config-engine'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -144,7 +178,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Utilities',
     ],
     keywords='sonic SONiC utilities command line cli CLI',
