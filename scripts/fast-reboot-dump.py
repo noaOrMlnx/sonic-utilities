@@ -320,7 +320,7 @@ def generate_default_route_entries(filename):
         json.dump(default_routes_output, fp, indent=2, separators=(',', ': '))
 
 def generate_media_config(filename):
-    db = SonicV2Connector(host='127.0.0.1')
+    db = swsssdk.SonicV2Connector(host='127.0.0.1')
     db.connect(db.APPL_DB, False)   # Make one attempt only
     media_config= []
     port_serdes_keys = ["preemphasis", "idriver", "ipredriver", "pre1", "pre2", "pre3", "main", "post1", "post2", "post3","attn"]

@@ -188,6 +188,20 @@ def dropcounters():
     """Clear drop counters"""
     command = "dropstat -c clear"
     run_command(command)
+    
+@click.command()
+@click.argument('interface', required=False)
+def dhcp6relay_counters(interface):
+    """ Clear dhcp6relay message counts """
+
+    if interface:
+        cmd = "show dhcp6relay_counters clear -i " + interface
+    else:
+        cmd = "show dhcp6relay_counters clear"
+
+    run_command(cmd)
+
+cli.add_command(dhcp6relay_counters)
 
 #
 # 'clear watermarks

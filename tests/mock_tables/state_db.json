@@ -621,5 +621,19 @@
         "linkmgrd_switch_standby_end": "2021-May-13 10:01:15.696728",
         "xcvrd_switch_standby_end": "2021-May-13 10:01:15.696051",
         "xcvrd_switch_standby_start": "2021-May-13 10:01:15.690835"
+    },
+    "DHCPv6_COUNTER_TABLE|Vlan1000": {
+        "Unknown": "0",
+        "Solicit": "0",
+        "Advertise": "0",
+        "Request": "0",
+        "Confirm": "0",
+        "Renew": "0",
+        "Rebind": "0",
+        "Reply": "0",
+        "Release": "0",
+        "Decline": "0",
+        "Relay-Forward": "0",
+        "Relay-Reply": "0"
     }
 }

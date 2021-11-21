@@ -2399,5 +2399,8 @@
     },
     "QUEUE|Ethernet96|6": {
         "scheduler": "[SCHEDULER|scheduler.0]"
+    },
+    "DHCP_RELAY|Vlan1000": {
+        "dhcpv6_servers@": "fc02:2000::1,fc02:2000::2"
     }
 }
