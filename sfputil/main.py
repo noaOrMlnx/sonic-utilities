@@ -830,6 +830,33 @@ def hexdump(indent, data, mem_address):
         mem_address += 16
     return '\n'.join(lines)
 
+
+# 'eeprom-hexdump-all' subcommand
+@show.command()
+def eeprom_hexdump_all():
+    """Display EEPROM hexdump of SFP transceiver(s) for all modules"""
+    lines = []
+
+    for index, sfp in enumerate(platform_chassis.get_all_sfps()):
+        try:
+            presence = sfp.get_presence()
+            if not presence:
+                lines.append(f'\nModule {index + 1} not present')
+            else:
+                lines.append(f'\nEEPROM hexdump for module {index + 1}')
+                eeprom_data = sfp.dump_eeprom()
+                if eeprom_data is None:
+                    lines.append('        N/A\n')
+                else:
+                    lines.append(eeprom_data)
+        except NotImplementedError:
+            lines.append(f'\nModule {index + 1} not supported')
+        except Exception as e:
+            lines.append(f'\nModule {index + 1} get EEPROM failed: {e}')
+
+    click.echo('\n'.join(lines))
+
+
 # 'presence' subcommand
 @show.command()
 @click.option('-p', '--port', metavar='<port_name>', help="Display SFP presence for port <port_name> only")

@@ -1126,7 +1126,7 @@ collect_mellanox_dfw_dumps() {
     local sdk_dump_path=`cat /usr/share/sonic/device/${platform}/${hwsku}/sai.profile|grep "SAI_DUMP_STORE_PATH"|cut -d = -f2`
 
     if [[ ! -d $sdk_dump_path ]]; then
-       # This would mean the SAI_DUMP_STORE_PATH is not mounted on the host and is only accessible though the container 
+       # This would mean the SAI_DUMP_STORE_PATH is not mounted on the host and is only accessible though the container
        # This is a bad design and not recommended But there is nothing which restricts against it and thus the special handling
        if [[ "$( docker container inspect -f '{{.State.Running}}' syncd )" == "true" ]]; then
             $RM $V -rf /tmp/dfw-sdk-dumps
@@ -1382,7 +1382,7 @@ collect_barefoot() {
     for file in $(find /tmp/bf_logs -type f); do
         save_file "${file}" log true
     done
-} 
+}
 
 ###############################################################################
 # Collect Cisco-8000 specific information
@@ -1714,6 +1714,7 @@ main() {
     save_cmd "show interface transceiver presence" "interface.xcvrs.presence" &
     save_cmd "show interface transceiver eeprom --dom" "interface.xcvrs.eeprom" &
     save_cmd "show ip interface -d all" "ip.interface" &
+    save_cmd "sfputil show eeprom-hexdump-all" "interface.xcvrs.eeprom.raw" &
     wait
 
     save_cmd "lldpctl" "lldpctl" &
@@ -1833,7 +1834,7 @@ main() {
 
     save_to_tar
 
-    save_sai_failure_dump 
+    save_sai_failure_dump
 
     if [[ "$asic" = "mellanox" ]]; then
         collect_mellanox_dfw_dumps

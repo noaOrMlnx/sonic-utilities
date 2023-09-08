@@ -760,6 +760,37 @@ Ethernet0  N/A
         assert result.exit_code == 0
         assert result.output == expected_output
 
+    @patch('sfputil.main.platform_chassis')
+    def test_eeprom_hexdump_all(self, mock_chassis):
+        sfp_list = [MagicMock() for x in range(5)]
+        sfp_list[0].get_presence = MagicMock(return_value=False)
+        sfp_list[1].get_presence = MagicMock(side_effect=NotImplementedError)
+        sfp_list[2].get_presence = MagicMock(side_effect=RuntimeError('error'))
+        sfp_list[3].get_presence = MagicMock(return_value=True)
+        sfp_list[3].dump_eeprom = MagicMock(return_value=None)
+        sfp_list[4].get_presence = MagicMock(return_value=True)
+        sfp_list[4].dump_eeprom = MagicMock(return_value='        Hello')
+        mock_chassis.get_all_sfps.return_value = sfp_list
+        runner = CliRunner()
+        result = runner.invoke(sfputil.cli.commands['show'].commands['eeprom-hexdump-all'])
+        assert result.exit_code == 0
+        expected_output = """
+Module 1 not present
+
+Module 2 not supported
+
+Module 3 get EEPROM failed: error
+
+EEPROM hexdump for module 4
+        N/A
+
+
+EEPROM hexdump for module 5
+        Hello
+"""
+        print(result.output)
+        assert result.output == expected_output
+
     @patch('sfputil.main.logical_port_name_to_physical_port_list', MagicMock(return_value=1))
     @patch('sfputil.main.is_port_type_rj45', MagicMock(return_value=True))
     @patch('sfputil.main.platform_sfputil', MagicMock(is_logical_port=MagicMock(return_value=1)))
