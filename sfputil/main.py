@@ -793,33 +793,42 @@ def eeprom_hexdump_sff8636(port, physical_port, page):
 
     return output
 
+
 def convert_byte_to_valid_ascii_char(byte):
     if byte < 32 or 126 < byte:
         return '.'
     else:
         return chr(byte)
 
-def hexdump(indent, data, mem_address):
-    ascii_string = ''
-    result = ''
-    for byte in data:
-        ascii_string = ascii_string + convert_byte_to_valid_ascii_char(byte)
-        byte_string = "{:02x}".format(byte)
-        if mem_address % 16 == 0:
-            mem_address_string = "{:08x}".format(mem_address)
-            result += '\n{}{} '.format(indent, mem_address_string)
-            result += '{} '.format(byte_string)
-        elif mem_address % 16 == 15:
-            result += '{} '.format(byte_string)
-            result += '|{}|'.format(ascii_string)
-            ascii_string = ""
-        elif mem_address % 16 == 8:
-            result += ' {} '.format(byte_string)
-        else:
-            result += '{} '.format(byte_string)
-        mem_address += 1
 
-    return result
+def hexdump(indent, data, mem_address):
+    size = len(data)
+    offset = 0
+    lines = []
+    while size > 0:
+        offset_str = "{}{:08x}".format(indent, mem_address)
+        if size >= 16:
+            first_half = ' '.join("{:02x}".format(x) for x in data[offset:offset + 8])
+            second_half = ' '.join("{:02x}".format(x) for x in data[offset + 8:offset + 16])
+            ascii_str = ''.join(convert_byte_to_valid_ascii_char(x) for x in data[offset:offset + 16])
+            lines.append(f'{offset_str} {first_half}  {second_half} |{ascii_str}|')
+        elif size > 8:
+            first_half = ' '.join("{:02x}".format(x) for x in data[offset:offset + 8])
+            second_half = ' '.join("{:02x}".format(x) for x in data[offset + 8:offset + size])
+            padding = '   ' * (16 - size)
+            ascii_str = ''.join(convert_byte_to_valid_ascii_char(x) for x in data[offset:offset + size])
+            lines.append(f'{offset_str} {first_half}  {second_half}{padding} |{ascii_str}|')
+            break
+        else:
+            hex_part = ' '.join("{:02x}".format(x) for x in data[offset:offset + size])
+            padding = '   ' * (16 - size)
+            ascii_str = ''.join(convert_byte_to_valid_ascii_char(x) for x in data[offset:offset + size])
+            lines.append(f'{offset_str} {hex_part} {padding} |{ascii_str}|')
+            break
+        size -= 16
+        offset += 16
+        mem_address += 16
+    return '\n'.join(lines)
 
 # 'presence' subcommand
 @show.command()
@@ -1293,10 +1302,10 @@ def is_fw_switch_done(port_name):
                 status = -1 # Abnormal status.
             elif (ImageARunning == 1) and (ImageACommitted == 0):   # ImageA is running, but not committed.
                 click.echo("FW images switch successful : ImageA is running")
-                status = 1  # run_firmware is done. 
+                status = 1  # run_firmware is done.
             elif (ImageBRunning == 1) and (ImageBCommitted == 0):   # ImageB is running, but not committed.
                 click.echo("FW images switch successful : ImageB is running")
-                status = 1  # run_firmware is done. 
+                status = 1  # run_firmware is done.
             else:                                                   # No image is running, or running and committed image is same.
                 click.echo("FW info error : Failed to switch into uncommitted image!")
                 status = -1 # Failure for Switching images.
@@ -1553,6 +1562,82 @@ def unlock(port_name, password):
         click.echo("CDB: Host password accepted")
     else:
         click.echo("CDB: Host password NOT accepted! status = {}".format(status))
+
+
+# 'read-eeprom' subcommand
+@cli.command()
+@click.argument('port_name', metavar='<port_name>', required=True)
+@click.argument('page', metavar='<page>', type=click.INT, required=True)
+@click.argument('offset', metavar='<offset>', type=click.INT, required=True)
+@click.argument('size', metavar='<size>', type=click.INT, required=True)
+@click.option('--no-format', type=click.INT, is_flag=True, help="Display non formatted data")
+@click.option('--wire-addr', help="Wire address of sff8472")
+def read_eeprom(port_name, page, offset, size, no_format, wire_addr):
+    """Read SFP EEPROM data"""
+    if is_port_type_rj45(port_name):
+        click.echo("This functionality is not applicable for RJ45 port {}.".format(port_name))
+        sys.exit(EXIT_FAIL)
+
+    physical_port = logical_port_to_physical_port_index(port_name)
+    sfp = platform_chassis.get_sfp(physical_port)
+    if not sfp.get_presence():
+        click.echo("{}: SFP EEPROM not detected\n".format(port_name))
+        sys.exit(EXIT_FAIL)
+
+    try:
+        data = sfp.read_eeprom_by_page(page, offset, size, wire_addr)
+        if data is None:
+            click.echo("Error: Failed to read EEPROM!")
+            sys.exit(ERROR_NOT_IMPLEMENTED)
+        if no_format:
+            click.echo(''.join('{:02x}'.format(x) for x in data))
+        else:
+            click.echo(hexdump('', data, offset))
+    except NotImplementedError:
+        click.echo("This functionality is currently not implemented for this platform")
+        sys.exit(ERROR_NOT_IMPLEMENTED)
+    except ValueError as e:
+        click.echo("Error: {}".format(e))
+        sys.exit(EXIT_FAIL)
+
+
+# 'write-eeprom' subcommand
+@cli.command()
+@click.argument('port_name', metavar='<port_name>', required=True)
+@click.argument('page', metavar='<page>', type=click.INT, required=True)
+@click.argument('offset', metavar='<offset>', type=click.INT, required=True)
+@click.argument('data', metavar='<data>', required=True)
+@click.option('--wire-addr', help="Wire address of sff8472")
+def write_eeprom(port_name, page, offset, data, wire_addr):
+    """Write SFP EEPROM data"""
+    if is_port_type_rj45(port_name):
+        click.echo("This functionality is not applicable for RJ45 port {}.".format(port_name))
+        sys.exit(EXIT_FAIL)
+
+    physical_port = logical_port_to_physical_port_index(port_name)
+    sfp = platform_chassis.get_sfp(physical_port)
+    if not sfp.get_presence():
+        click.echo("{}: SFP EEPROM not detected\n".format(port_name))
+        sys.exit(EXIT_FAIL)
+
+    try:
+        bytes = bytearray.fromhex(data)
+    except ValueError:
+        click.echo("Error: Data must be a hex string of even length!")
+        sys.exit(EXIT_FAIL)
+
+    try:
+        success = sfp.write_eeprom_by_page(page, offset, bytes, wire_addr)
+        if not success:
+            click.echo("Error: Failed to write EEPROM!")
+            sys.exit(ERROR_NOT_IMPLEMENTED)
+    except NotImplementedError:
+        click.echo("This functionality is currently not implemented for this platform")
+        sys.exit(ERROR_NOT_IMPLEMENTED)
+    except ValueError as e:
+        click.echo("Error: {}".format(e))
+        sys.exit(EXIT_FAIL)
+
 
 # 'version' subcommand
 @cli.command()
