@@ -14,15 +14,15 @@ GET_HWSKU_CMD = "sonic-cfggen -d -v DEVICE_METADATA.localhost.hwsku"
 
 def get_asic_name():
     asic = "unknown"
-    
+
     if os.path.exists(GCU_TABLE_MOD_CONF_FILE):
         with open(GCU_TABLE_MOD_CONF_FILE, "r") as s:
             gcu_field_operation_conf = json.load(s)
     else:
         raise GenericConfigUpdaterError("GCU table modification validators config file not found")
-    
+
     asic_mapping = gcu_field_operation_conf["helper_data"]["rdma_config_update_validator"]
-    asic_type = device_info.get_sonic_version_info()['asic_type'] 
+    asic_type = device_info.get_sonic_version_info()['asic_type']
 
     if asic_type == 'cisco-8000':
         asic = "cisco-8000"
@@ -35,6 +35,7 @@ def get_asic_name():
             spc2_hwskus = asic_mapping["mellanox_asics"]["spc2"]
             spc3_hwskus = asic_mapping["mellanox_asics"]["spc3"]
             spc4_hwskus = asic_mapping["mellanox_asics"]["spc4"]
+            spc5_hwskus = asic_mapping["mellanox_asics"]["spc5"]
             if hwsku.lower() in [spc1_hwsku.lower() for spc1_hwsku in spc1_hwskus]:
                 asic = "spc1"
                 return asic
@@ -46,6 +47,9 @@ def get_asic_name():
                 return asic
             if hwsku.lower() in [spc4_hwsku.lower() for spc4_hwsku in spc4_hwskus]:
                 asic = "spc4"
+                return asic
+            if hwsku.lower() in [spc5_hwsku.lower() for spc5_hwsku in spc5_hwskus]:
+                asic = "spc5"
                 return asic
         if asic_type == 'broadcom' or asic_type == 'vs':
             broadcom_asics = asic_mapping["broadcom_asics"]
@@ -68,14 +72,14 @@ def rdma_config_update_validator(patch_element):
     build_version = version_info.get('build_version')
     version_substrings = build_version.split('.')
     branch_version = None
-    
+
     for substring in version_substrings:
         if substring.isdigit() and re.match(r'^\d{8}$', substring):
             branch_version = substring
-    
+
     path = patch_element["path"]
     table = jsonpointer.JsonPointer(path).parts[0]
-    
+
     # Helper function to return relevant cleaned paths, considers case where the jsonpatch value is a dict
     # For paths like /PFC_WD/Ethernet112/action, remove Ethernet112 from the path so that we can clearly determine the relevant field (i.e. action, not Ethernet112)
     def _get_fields_in_patch():
@@ -84,7 +88,7 @@ def rdma_config_update_validator(patch_element):
         field_elements = jsonpointer.JsonPointer(path).parts[1:]
         cleaned_field_elements = [elem for elem in field_elements if not any(char.isdigit() for char in elem)]
         cleaned_field = '/'.join(cleaned_field_elements).lower()
-        
+
 
         if 'value' in patch_element.keys() and isinstance(patch_element['value'], dict):
             for key in patch_element['value']:
@@ -96,7 +100,7 @@ def rdma_config_update_validator(patch_element):
             cleaned_fields.append(cleaned_field)
 
         return cleaned_fields
-    
+
     if os.path.exists(GCU_TABLE_MOD_CONF_FILE):
         with open(GCU_TABLE_MOD_CONF_FILE, "r") as s:
             gcu_field_operation_conf = json.load(s)
@@ -105,7 +109,7 @@ def rdma_config_update_validator(patch_element):
 
     tables = gcu_field_operation_conf["tables"]
     scenarios = tables[table]["validator_data"]["rdma_config_update_validator"]
-    
+
     cleaned_fields = _get_fields_in_patch()
     for cleaned_field in cleaned_fields:
         scenario = None
@@ -113,16 +117,16 @@ def rdma_config_update_validator(patch_element):
             if cleaned_field in scenarios[key]["fields"]:
                 scenario = scenarios[key]
                 break
-    
+
         if scenario is None:
             return False
-        
+
         if scenario["platforms"][asic] == "":
             return False
 
         if patch_element['op'] not in scenario["operations"]:
             return False
-    
+
         if branch_version is not None:
             if asic in scenario["platforms"]:
                 if branch_version < scenario["platforms"][asic]:
@@ -164,17 +168,17 @@ def port_config_update_validator(patch_element):
                 return False
             return True
         return False
-    
+
     def _parse_port_from_path(path):
         match = re.search(r"Ethernet\d+", path)
         if match:
             port = match.group(0)
             return port
         return None
-    
+
     if patch_element["op"] == "remove":
         return True
-    
+
     # for PORT speed and fec configs, need to ensure value is allowed based on StateDB
     patch_element_str = json.dumps(patch_element)
     path = patch_element["path"]
