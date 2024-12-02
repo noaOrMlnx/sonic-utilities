@@ -2032,6 +2032,7 @@ def load_minigraph(db, no_service_restart, traffic_shift_away, override_config, 
     #Stop services before config push
     if not no_service_restart:
         log.log_notice("'load_minigraph' stopping services...")
+        delete_transceiver_tables()
         _stop_services()
 
     # For Single Asic platform the namespace list has the empty string
